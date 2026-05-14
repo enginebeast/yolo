@@ -3,7 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 # OpenCV Framework library
 import cv2
-
+import glob
+import random
 
 net = cv2.dnn.readNet("./config/yolov3.weights", "./config/yolov3.cfg")
 
@@ -16,12 +17,13 @@ with open("./config/coco.names", "r") as f :
 layer_names = net.getLayerNames()
 
 # Extract unconnected outlayer
-output_layer = [layer_names[ i-1] for i in net.getUnconnectedOutLayers()]
+output_layer = [layer_names[i-1] for i in net.getUnconnectedOutLayers()]
 
 
 def predict_yolo(img_path) :
     # Check opence_test.py
-    img = cv2.imread("./cardataset/training_images/vid_4_10000.jpg")
+    # "./cardataset/training_images/*"
+    img = cv2.imread(img_path)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
     height, width, channels = img.shape
@@ -82,13 +84,11 @@ def predict_yolo(img_path) :
                 confidences.append(float(confidence))
                 class_ids.append(class_id)
 
-                # Remove overlapping bounding box
-                indexes = cv2.dnn.NMSBoxes(boxes, confidences, 0.5, 0.4)
-
+    # Remove overlapping bounding box
+    indexes = cv2.dnn.NMSBoxes(boxes, confidences, 0.5, 0.4)
 
     font = cv2.FONT_HERSHEY_PLAIN
     colors = np.random.uniform(0, 255, size=(len(boxes), 3))
-
     
     # If there is recognized object
     if len(indexes) > 0:
@@ -111,3 +111,12 @@ def predict_yolo(img_path) :
 
     else :
         print("There is not recognized object!!!")
+# End of predict_yolo
+
+# Process random file
+paths = glob.glob("./cardataset/testing_images/*.jpg")
+img_path = random.choice(paths)
+# Replace the \\ as /
+img_path = img_path.replace("\\", "/")
+print(f"File name : {img_path}")
+predict_yolo(img_path)
